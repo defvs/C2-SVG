@@ -23,15 +23,19 @@ fun main(args: Array<String>) {
 	}
 	
 	val chart = JsonCytusChart.parseChartFromFile(path).toCytusChart()
+	val allNotes = chart.pages.flatMap { it.notes }
 	
-	chart.pages.forEachNeighboured { index, previous, current, next ->
+	chart.pages.forEachNeighboured { index, _, current, next ->
 		val svg = SVG.svg {
-			height = "450"
+			height = "400"
 			width = "550"
 			
+			val paddingX = 25
+			val paddingY = 50
+			
 			rect {
-				x = "25"
-				y = "125"
+				x = paddingX.toString()
+				y = paddingY.toString()
 				width = "500"
 				height = "300"
 				fill = "black"
@@ -39,14 +43,51 @@ fun main(args: Array<String>) {
 				strokeWidth = "4"
 			}
 			
-			current.notes.forEach {
-				val relativeTick = it.tick - current.startTick
-				val floatTick = relativeTick.toFloat() / (current.endTick - current.startTick)
-				var y = (300 * floatTick).roundToInt()
-				if (current.direction == CytusPage.ScanlineDirection.Up) y = 300 - y
-				val x = (it.x * 500).roundToInt()
+			fun calculateY(note: CytusNote) =
+				((300 * (note.tick - current.startTick).toFloat() / (current.endTick - current.startTick))).let {
+					if (current.direction == CytusPage.ScanlineDirection.Up) 300 - it else it
+				} + paddingY
+			
+			fun calculateX(note: CytusNote) = note.x * 500 + paddingX
+			
+			val dashes = g {}
+			val heads = g {}
+			
+			current.notes.forEach { note ->
+				val y = calculateY(note)
+				val x = calculateX(note)
 				
-				note(x = x + 25, y = y + 125, it.type, current.direction)
+				when (note.type) {
+					DragHead, DragChild, ClickDragHead, ClickDragChild -> {
+						if (listOf(-1, 0).contains(note.nextId).not()) {
+							dashes.line {
+								x1 = x.toString()
+								y1 = y.toString()
+								
+								val nextNote = allNotes.find { it.id == note.nextId }!!
+								x2 = calculateX(nextNote).toString()
+								y2 = calculateY(nextNote).toString()
+								
+								strokeWidth = "5"
+								stroke = "#FFFFFFB4"
+								strokeDashArray = "3,3"
+							}
+						}
+					}
+					
+					Hold -> {
+					
+					}
+					
+					LongHold -> {
+					
+					}
+					
+					else -> {
+					}
+				}
+				heads.note(x, y, note.type, current.direction)
+				
 			}
 		}
 		
@@ -56,7 +97,7 @@ fun main(args: Array<String>) {
 }
 
 fun Container.note(
-	x: Int, y: Int,
+	x: Float, y: Float,
 	type: CytusNote.NoteType,
 	direction: CytusPage.ScanlineDirection,
 ) = type.svg(this, x, y, direction)

@@ -60,7 +60,7 @@ data class CytusNote(
 	): this(id, NoteType.fromInt(type), tick, x, holdLength, nextId, isForward)
 	
 	@Suppress("unused")
-	enum class NoteType(val svg: (Container.(x: Int, y: Int, direction: CytusPage.ScanlineDirection) -> Unit) = { _, _, _ -> }) {
+	enum class NoteType(val svg: (Container.(x: Float, y: Float, direction: CytusPage.ScanlineDirection) -> Unit) = { _, _, _ -> }) {
 		Tap({ x, y, direction ->
 			g {
 				circle {
@@ -137,15 +137,15 @@ data class CytusNote(
 				circle {
 					fill = "#AFC6CE"
 					stroke = "#171822"
-					r = "20"
-					strokeWidth = "5"
+					r = "26"
+					strokeWidth = "4"
 					cx = x.toString()
 					cy = y.toString()
 				}
 				circle {
 					stroke = "#171822"
 					fill = if (direction == CytusPage.ScanlineDirection.Up) "#AA66FF" else "#F666FF"
-					r = "12"
+					r = "18"
 					strokeWidth = "5"
 					cx = x.toString()
 					cy = y.toString()
